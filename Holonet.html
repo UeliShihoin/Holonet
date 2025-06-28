@@ -1,0 +1,438 @@
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoloNet News Imperial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Exo 2', sans-serif; background-color: #0a0a0a; color: #d1d5db; }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .holonet-container { border: 1px solid #4b0000; box-shadow: 0 0 15px rgba(255, 0, 0, 0.3), inset 0 0 10px rgba(255, 0, 0, 0.2); background: linear-gradient(145deg, #111111, #000000); }
+        .holonet-header { border-bottom: 1px solid #4b0000; }
+        .article-card { border: 1px solid #374151; background-color: rgba(17, 24, 39, 0.5); transition: all 0.3s ease; }
+        .article-card:hover { border-color: #ef4444; transform: translateY(-5px); }
+        .ticker-wrap { width: 100%; overflow: hidden; background-color: #111827; border-top: 1px solid #4b0000; border-bottom: 1px solid #4b0000; }
+        .ticker { display: inline-block; white-space: nowrap; padding-right: 100%; animation: ticker 40s linear infinite; }
+        .ticker-item { display: inline-block; padding: 0 2rem; color: #fca5a5; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .loader { border: 4px solid #374151; border-top: 4px solid #ef4444; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn { transition: all 0.3s ease; }
+        .btn-refresh { background-color: #991b1b; } .btn-refresh:hover { background-color: #ef4444; }
+        .btn-hack { background-color: #1d4ed8; } .btn-hack:hover { background-color: #3b82f6; }
+        .imperial-crest { width: 80px; height: 80px; filter: invert(15%) sepia(85%) saturate(5000%) hue-rotate(350deg) brightness(90%) contrast(110%); }
+        .official-message { border-left: 4px solid #ef4444; }
+        .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 50; }
+        .modal-content { background: #111827; border: 1px solid #4b5563; border-radius: 0.5rem; padding: 1.5rem; width: 95%; max-width: 500px; text-align: center; }
+        #rebel-textarea { background-color: #1f2937; border: 1px solid #3b82f6; color: #e5e7eb; width: 100%; height: 150px; }
+        .rebel-broadcast { border: 2px dashed #3b82f6; background-color: rgba(29, 78, 216, 0.1); color: #93c5fd; }
+        .rebel-broadcast h2 { color: #60a5fa; }
+        
+        /* New Circuit Minigame Styles */
+        #circuit-grid { display: grid; grid-template-columns: repeat(var(--grid-size, 5), 1fr); gap: 4px; background-color: #000; border: 2px solid #374151; padding: 4px; margin: 1rem auto; }
+        .circuit-tile { aspect-ratio: 1 / 1; background-color: #1f2937; cursor: pointer; transition: transform 0.2s ease; }
+        .circuit-tile svg { width: 100%; height: 100%; }
+        .circuit-tile path { fill: none; stroke: #1d4ed8; stroke-width: 8; stroke-linecap: round; transition: stroke 0.3s ease; }
+        .circuit-tile.lit path { stroke: #34d399; /* Green for powered */ }
+        .circuit-tile.start path, .circuit-tile.end path { stroke: #f59e0b; /* Amber for start/end */ }
+    </style>
+</head>
+<body class="bg-black">
+
+    <div id="loading-screen" class="fixed inset-0 bg-black bg-opacity-90 flex flex-col justify-center items-center z-50">
+        <div class="loader mb-4"></div>
+        <p class="text-lg text-red-400 font-orbitron">A estabelecer ligação com os Mundos do Núcleo...</p>
+    </div>
+
+    <div id="content-container" class="min-h-screen p-4 md:p-8 opacity-0 transition-opacity duration-1000">
+        <div class="holonet-container max-w-7xl mx-auto rounded-lg overflow-hidden">
+            <header class="holonet-header p-4 md:p-6 flex flex-col md:flex-row items-center justify-between text-center md:text-left">
+                <div class="flex items-center">
+                    <svg class="imperial-crest mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,2.5A47.5,47.5,0,1,0,97.5,50,47.5,47.5,0,0,0,50,2.5Zm0,85A37.5,37.5,0,1,1,87.5,50,37.5,37.5,0,0,1,50,87.5Z"/><path d="M50,15.94a34.06,34.06,0,1,0,34.06,34.06A34.06,34.06,0,0,0,50,15.94Zm0,61.12A27.06,27.06,0,1,1,77.06,50,27.06,27.06,0,0,1,50,77.06Z"/><path d="M50,40.19l-16,8.4,16,8.4,16-8.4-16-8.4Zm0-12.6L25.4,40.19,50,52.79,74.6,40.19,50,27.59Zm0,30.2L25.4,59.39,50,72,74.6,59.39,50,57.79Z"/><polygon points="50 50 50 20.3 69.7 30.15 50 40 50 50"/><polygon points="50 50 50 20.3 30.3 30.15 50 40 50 50"/><polygon points="50 50 50 79.7 69.7 69.85 50 60 50 50"/><polygon points="50 50 50 79.7 30.3 69.85 50 60 50 50"/><line x1="50" y1="20.3" x2="50" y2="79.7"/></svg>
+                    <div>
+                        <h1 class="text-2xl md:text-4xl font-orbitron text-red-500 tracking-wider">HoloNet News</h1>
+                        <p class="text-sm md:text-base text-gray-400">A Voz Oficial do Império Galáctico</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2 mt-4 md:mt-0">
+                     <button id="hack-button" class="btn btn-hack text-white font-bold py-2 px-4 rounded-md flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        Hackear
+                    </button>
+                    <button id="refresh-button" class="btn btn-refresh text-white font-bold py-2 px-4 rounded-md flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm10.293 9.293a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L15 14.414V17a1 1 0 11-2 0v-2.586l-1.293 1.293a1 1 0 01-1.414-1.414l3-3z" clip-rule="evenodd" /></svg>
+                        Atualizar
+                    </button>
+                </div>
+            </header>
+            
+            <div class="ticker-wrap"><div class="ticker"><div id="bulletin" class="ticker-item font-bold uppercase">...</div></div></div>
+
+            <main class="p-4 md:p-8">
+                <div id="rebel-broadcast-container" class="hidden"></div>
+                <!-- Restored Imperial Content Structure -->
+                <div id="imperial-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div id="main-article" class="article-card p-6 rounded-lg h-full"></div>
+                        </div>
+                        <div class="space-y-6">
+                            <div id="official-message" class="article-card p-5 rounded-lg official-message">
+                                <h3 class="font-orbitron text-lg text-red-400 mb-2">Mensagem Oficial</h3>
+                                <div id="message-content"></div>
+                            </div>
+                            <div id="thought-of-the-day" class="article-card p-5 rounded-lg">
+                                <h3 class="font-orbitron text-lg text-red-400 mb-2">Pensamento do Dia</h3>
+                                <p class="text-gray-300 italic">"..."</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h2 class="text-2xl font-orbitron text-red-500 border-b-2 border-red-800 pb-2 mb-4">Outras Transmissões</h2>
+                        <div id="secondary-articles" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Hacking Minigame Modal -->
+    <div id="hack-minigame-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-orbitron text-blue-400">DESVIO DE ENERGIA</h2>
+                <div id="minigame-timer" class="font-orbitron text-2xl text-yellow-400">30</div>
+            </div>
+            <p id="minigame-status" class="text-gray-400 mb-4">Conecte a fonte de energia (laranja) à saída para sobrecarregar o sistema.</p>
+            <div id="circuit-grid-container">
+                 <div id="circuit-grid"></div>
+            </div>
+            <button id="give-up-btn" class="mt-4 btn btn-refresh text-white font-bold py-2 px-6 rounded-md">Abortar</button>
+        </div>
+    </div>
+
+    <!-- Other Modals (Rebel Broadcast, Failure Alert) -->
+    <div id="rebel-broadcast-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-orbitron text-blue-400 mb-2">CANAL ABERTO!</h2>
+            <p class="text-gray-400 mb-4">Acesso concedido. Tem <span id="broadcast-timer" class="font-bold text-yellow-400">60</span> segundos para transmitir a sua mensagem.</p>
+            <textarea id="rebel-textarea" class="p-2 rounded-md font-mono" placeholder="A esperança é como o sol. Se você apenas acreditar quando puder vê-la, nunca sobreviverá à noite."></textarea>
+            <button id="broadcast-btn" class="mt-4 btn btn-hack text-white font-bold py-2 px-6 rounded-md">Transmitir para a Galáxia</button>
+        </div>
+    </div>
+    <div id="failure-alert-modal" class="modal-overlay hidden">
+         <div class="modal-content border-red-600">
+            <h2 class="text-3xl font-orbitron text-red-500 mb-2 animate-pulse">ALERTA DE INTRUSÃO!</h2>
+            <p class="text-gray-300 text-lg">A sua localização foi triangulada. As forças de segurança imperiais foram despachadas.</p>
+            <p class="text-gray-400 mt-4">Permaneça onde está e aguarde a sua detenção. A resistência é inútil.</p>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // Elements
+        const loadingScreen = document.getElementById('loading-screen');
+        const contentContainer = document.getElementById('content-container');
+        const imperialContentEl = document.getElementById('imperial-content');
+        const mainArticleEl = document.getElementById('main-article');
+        const secondaryArticlesEl = document.getElementById('secondary-articles');
+        const messageContentEl = document.getElementById('message-content');
+        const thoughtEl = document.getElementById('thought-of-the-day').querySelector('p');
+        let bulletinEl = document.getElementById('bulletin');
+        const refreshButton = document.getElementById('refresh-button');
+        const hackButton = document.getElementById('hack-button');
+
+        // Modals
+        const hackModal = document.getElementById('hack-minigame-modal');
+        const rebelModal = document.getElementById('rebel-broadcast-modal');
+        const failureModal = document.getElementById('failure-alert-modal');
+        
+        // Hacking Game Elements
+        const minigameTimerEl = document.getElementById('minigame-timer');
+        const circuitGridEl = document.getElementById('circuit-grid');
+        const giveUpBtn = document.getElementById('give-up-btn');
+        
+        // Rebel Broadcast Elements
+        const rebelTextarea = document.getElementById('rebel-textarea');
+        const broadcastBtn = document.getElementById('broadcast-btn');
+        const broadcastTimerEl = document.getElementById('broadcast-timer');
+        const rebelBroadcastContainer = document.getElementById('rebel-broadcast-container');
+
+        // Game State
+        const GRID_SIZE = 6;
+        let grid = [];
+        let gameTimer;
+        let broadcastTimer;
+
+        // Tile definitions using SVG paths
+        const TILE_SVG = {
+            I: '<svg viewBox="0 0 100 100"><path d="M50 0 V100"/></svg>',
+            L: '<svg viewBox="0 0 100 100"><path d="M50 0 V50 H100"/></svg>',
+        };
+        const TILE_TYPES = ['I', 'L'];
+        
+        // --- CORE IMPERIAL NEWS LOGIC ---
+        async function generateImperialNews() {
+            showLoading();
+            const prompt = `Aja como o Ministério da Informação do Império Galáctico de Star Wars. O seu público são os cidadãos leais do Império. Gere um conjunto de notícias para a HoloNet News que siga estritamente as seguintes diretrizes:
+            1.  **Tom:** Autoritário, patriótico, triunfalista.
+            2.  **Propaganda:** Enfatize a força militar e industrial. Retrate a Aliança Rebelde como terroristas.
+            3.  **Narrativa:** Crie histórias sobre sucessos económicos, vitórias militares, e a benevolência do Imperador.
+            Gere o conteúdo no formato JSON estrito especificado no schema.`;
+            
+            let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+            
+            const payload = {
+                contents: chatHistory,
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "mainArticle": { type: "OBJECT", properties: { "headline": { "type": "STRING" }, "body": { "type": "STRING" }, "author": { "type": "STRING" } } },
+                            "secondaryArticles": { type: "ARRAY", items: { type: "OBJECT", properties: { "headline": { "type": "STRING" }, "body": { "type": "STRING" } } } },
+                            "bulletin": { "type": "STRING" },
+                            "thoughtOfTheDay": { "type": "STRING" },
+                            "officialMessage": { type: "OBJECT", properties: { "sender": { "type": "STRING" }, "message": { "type": "STRING" } } }
+                        }
+                    }
+                }
+            };
+            
+            const apiKey = ""; // Insira a sua chave API aqui, se necessário
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { throw new Error(`API error: ${response.statusText}`); }
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates[0]?.content?.parts?.[0]?.text) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    const data = JSON.parse(text);
+                    updateUI(data);
+                } else {
+                    let errorMessage = "A resposta do Núcleo está corrompida ou vazia.";
+                    if (result.promptFeedback?.blockReason) { errorMessage += ` Causa provável: ${result.promptFeedback.blockReason}`; }
+                    displayError(errorMessage);
+                }
+            } catch (error) {
+                console.error("Erro ao contactar a HoloNet:", error);
+                displayError("Falha na ligação à HoloNet. Usando transmissão de emergência.");
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function updateUI(data) {
+            mainArticleEl.innerHTML = `<h2 class="text-2xl font-orbitron text-red-400 mb-3">${data.mainArticle.headline}</h2><p class="text-gray-300 mb-4 leading-relaxed">${data.mainArticle.body}</p><p class="text-sm text-gray-500 text-right italic">- ${data.mainArticle.author}</p>`;
+            secondaryArticlesEl.innerHTML = '';
+            data.secondaryArticles.forEach(article => {
+                const articleDiv = document.createElement('div');
+                articleDiv.className = 'article-card p-5 rounded-lg';
+                articleDiv.innerHTML = `<h3 class="text-xl font-orbitron text-red-400 mb-2">${article.headline}</h3><p class="text-gray-400">${article.body}</p>`;
+                secondaryArticlesEl.appendChild(articleDiv);
+            });
+            bulletinEl.textContent = `... BOLETIM: ${data.bulletin} ...`;
+            const tickerParent = bulletinEl.parentElement;
+            const newTicker = bulletinEl.cloneNode(true);
+            tickerParent.replaceChild(newTicker, bulletinEl);
+            bulletinEl = newTicker;
+            thoughtEl.textContent = `"${data.thoughtOfTheDay}"`;
+            messageContentEl.innerHTML = `<p class="text-gray-300 mb-2">"${data.officialMessage.message}"</p><p class="text-sm text-gray-500 text-right font-bold">- ${data.officialMessage.sender}</p>`;
+        }
+        
+        function displayError(message) {
+            mainArticleEl.innerHTML = `<h2 class="text-2xl font-orbitron text-yellow-400 mb-3">ERRO DE TRANSMISSÃO</h2><p class="text-gray-300 mb-4 leading-relaxed">${message}</p><p class="text-sm text-gray-500 text-right italic">- Controlo da HoloNet</p>`;
+            secondaryArticlesEl.innerHTML = `<div class="article-card p-5 rounded-lg"><h3 class="text-xl font-orbitron text-red-400 mb-2">PRODUÇÃO EM ALTA</h3><p class="text-gray-400">Estaleiros Navais de Kuat anunciam novo recorde na produção de Destróieres Estelares, garantindo a segurança da galáxia.</p></div>`;
+            messageContentEl.innerHTML = '<p>A ordem prevalece.</p>';
+            thoughtEl.textContent = '"A lealdade traz recompensas."';
+        }
+        
+        function showLoading() { loadingScreen.style.display = 'flex'; contentContainer.style.opacity = '0'; }
+        function hideLoading() { loadingScreen.style.display = 'none'; contentContainer.style.opacity = '1'; }
+
+        // --- NEW CIRCUIT MINIGAME LOGIC ---
+
+        function setupCircuitGame() {
+            clearInterval(gameTimer);
+            circuitGridEl.innerHTML = '';
+            grid = [];
+            circuitGridEl.style.setProperty('--grid-size', GRID_SIZE);
+            for (let y = 0; y < GRID_SIZE; y++) {
+                grid[y] = [];
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const type = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
+                    const rotation = Math.floor(Math.random() * 4) * 90;
+                    grid[y][x] = { type, rotation, lit: false, x, y };
+                }
+            }
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const tile = grid[y][x];
+                    const tileEl = document.createElement('div');
+                    tileEl.className = 'circuit-tile';
+                    tileEl.innerHTML = TILE_SVG[tile.type];
+                    tileEl.style.transform = `rotate(${tile.rotation}deg)`;
+                    tileEl.dataset.x = x;
+                    tileEl.dataset.y = y;
+                    if (x === 0 && y === Math.floor(GRID_SIZE / 2)) {
+                        tileEl.classList.add('start');
+                        tile.isStart = true;
+                    }
+                    if (x === GRID_SIZE - 1 && y === Math.floor(GRID_SIZE / 2)) {
+                        tileEl.classList.add('end');
+                        tile.isEnd = true;
+                    }
+                    tileEl.addEventListener('click', () => rotateTile(x, y));
+                    circuitGridEl.appendChild(tileEl);
+                }
+            }
+            let timeLeft = 30;
+            minigameTimerEl.textContent = timeLeft;
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                minigameTimerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    loseGame("Tempo esgotado! Contramedidas ativadas.");
+                }
+            }, 1000);
+            checkPath();
+        }
+        
+        function rotateTile(x, y) {
+            const tile = grid[y][x];
+            tile.rotation = (tile.rotation + 90) % 360;
+            const tileEl = circuitGridEl.querySelector(`[data-x='${x}'][data-y='${y}']`);
+            if (tileEl) {
+                tileEl.style.transform = `rotate(${tile.rotation}deg)`;
+            }
+            checkPath();
+        }
+
+        function getConnections(tile) {
+            const { type, rotation } = tile;
+            const connections = [];
+            const r = rotation % 180;
+            if (type === 'I') {
+                if (r === 0) { connections.push('N', 'S'); } else { connections.push('E', 'W'); }
+            } else if (type === 'L') {
+                if (rotation === 0) { connections.push('N', 'E'); }
+                else if (rotation === 90) { connections.push('S', 'E'); }
+                else if (rotation === 180) { connections.push('S', 'W'); }
+                else if (rotation === 270) { connections.push('N', 'W'); }
+            }
+            return connections;
+        }
+
+        function checkPath() {
+            grid.forEach(row => row.forEach(tile => tile.lit = false));
+            const startNode = grid[Math.floor(GRID_SIZE / 2)][0];
+            const queue = [startNode];
+            const visited = new Set([`${startNode.x},${startNode.y}`]);
+            startNode.lit = true;
+            while (queue.length > 0) {
+                const current = queue.shift();
+                const connections = getConnections(current);
+                const neighbors = [
+                    { x: current.x, y: current.y - 1, from: 'S', to: 'N' },
+                    { x: current.x + 1, y: current.y, from: 'W', to: 'E' },
+                    { x: current.x, y: current.y + 1, from: 'N', to: 'S' },
+                    { x: current.x - 1, y: current.y, from: 'E', to: 'W' },
+                ];
+                for (const n of neighbors) {
+                    if (n.x >= 0 && n.x < GRID_SIZE && n.y >= 0 && n.y < GRID_SIZE) {
+                        const neighborTile = grid[n.y][n.x];
+                        const neighborConnections = getConnections(neighborTile);
+                        if (connections.includes(n.to) && neighborConnections.includes(n.from) && !visited.has(`${n.x},${n.y}`)) {
+                            neighborTile.lit = true;
+                            visited.add(`${n.x},${n.y}`);
+                            queue.push(neighborTile);
+                        }
+                    }
+                }
+            }
+            for(let y=0; y<GRID_SIZE; y++){
+                for(let x=0; x<GRID_SIZE; x++){
+                    const tileEl = circuitGridEl.querySelector(`[data-x='${x}'][data-y='${y}']`);
+                    if(grid[y][x].lit){
+                        tileEl.classList.add('lit');
+                    } else {
+                        tileEl.classList.remove('lit');
+                    }
+                }
+            }
+            const endNode = grid[Math.floor(GRID_SIZE / 2)][GRID_SIZE - 1];
+            if (endNode.lit) {
+                winGame();
+            }
+        }
+
+        function winGame() {
+            clearInterval(gameTimer);
+            hackModal.classList.add('hidden');
+            rebelModal.classList.remove('hidden');
+            let timeLeft = 60;
+            broadcastTimerEl.textContent = timeLeft;
+            broadcastTimer = setInterval(() => {
+                timeLeft--;
+                broadcastTimerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endBroadcast();
+                }
+            }, 1000);
+        }
+
+        function loseGame(reason) {
+            clearInterval(gameTimer);
+            hackModal.classList.add('hidden');
+            failureModal.classList.remove('hidden');
+            failureModal.querySelector('p').textContent = reason || "Sua localização foi triangulada. As forças de segurança imperiais foram despachadas.";
+            setTimeout(() => {
+                failureModal.classList.add('hidden');
+                displayError("TENTATIVA DE INTRUSÃO DETETADA. A segurança foi reforçada.");
+            }, 5000);
+        }
+        
+        function endBroadcast() {
+            clearInterval(broadcastTimer);
+            rebelModal.classList.add('hidden');
+            rebelBroadcastContainer.classList.add('hidden');
+            imperialContentEl.classList.remove('hidden');
+            displayError("TRANSMISSÃO REBELDE INTERROMPIDA. A ordem foi restaurada.");
+        }
+
+        function handleBroadcast() {
+            const message = rebelTextarea.value;
+            if (!message.trim()) return;
+            clearInterval(broadcastTimer);
+            imperialContentEl.classList.add('hidden');
+            rebelBroadcastContainer.innerHTML = `<div class="p-6 rounded-lg rebel-broadcast animate-pulse"><h2 class="text-2xl font-orbitron mb-3">== MENSAGEM DA ALIANÇA REBELDE ==</h2><p class="text-lg leading-relaxed whitespace-pre-wrap">${message}</p></div>`;
+            rebelBroadcastContainer.classList.remove('hidden');
+            rebelModal.classList.add('hidden');
+        }
+
+        // --- Event Listeners ---
+        refreshButton.addEventListener('click', () => {
+             rebelBroadcastContainer.classList.add('hidden');
+             imperialContentEl.classList.remove('hidden');
+             generateImperialNews();
+        });
+        
+        hackButton.addEventListener('click', () => {
+            hackModal.classList.remove('hidden');
+            setupCircuitGame();
+        });
+        
+        giveUpBtn.addEventListener('click', () => loseGame("Intrusão abortada. Rasto apagado."));
+        broadcastBtn.addEventListener('click', handleBroadcast);
+        hackModal.addEventListener('click', (e) => { if(e.target === hackModal) loseGame("Intrusão abortada.")});
+
+        // Initial load
+        window.addEventListener('load', generateImperialNews);
+    </script>
+</body>
+</html>
